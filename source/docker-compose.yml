@@ -84,18 +84,22 @@ services:
   #   networks:
   #     - aresguard_net
 
-  # api_gateway:
-  #   build: ./api_gateway
-  #   container_name: aresguard_api_gateway
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     broker:
-  #       condition: service_healthy
-  #     database:
-  #       condition: service_healthy
-  #   networks:
-  #     - aresguard_net
+  api_gateway:
+    build: ./api_gateway
+    container_name: aresguard_api_gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      broker:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+    networks:
+      - aresguard_net
+    environment:
+      - BROKER_HOST=aresguard_broker
+      - RABBITMQ_DEFAULT_USER=ares
+      - RABBITMQ_DEFAULT_PASS=mars2036
 
   # frontend:
   #   build: ./frontend
