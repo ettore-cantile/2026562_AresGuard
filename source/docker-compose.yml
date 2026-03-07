@@ -56,17 +56,22 @@ services:
   # =========================================================
   # CUSTOM MICROSERVICES (To be uncommented in the next steps)
   # =========================================================
-  
-  # ingestion:
-  #   build: ./ingestion
-  #   container_name: aresguard_ingestion
-  #   depends_on:
-  #     broker:
-  #       condition: service_healthy
-  #     simulator:
-  #       condition: service_started
-  #   networks:
-  #     - aresguard_net
+  ingestion:
+     build: ./ingestion
+     container_name: aresguard_ingestion
+     depends_on:
+       broker:
+         condition: service_healthy
+       simulator:
+         condition: service_started
+     networks:
+       - aresguard_net
+     environment:
+       - SIMULATOR_URL=http://mars_simulator:8080/api/sensors
+       - BROKER_HOST=aresguard_broker
+       - RABBITMQ_DEFAULT_USER=ares
+       - RABBITMQ_DEFAULT_PASS=mars2036
+
 
   # rule_engine:
   #   build: ./rule_engine
