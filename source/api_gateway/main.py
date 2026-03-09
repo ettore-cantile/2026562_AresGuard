@@ -3,7 +3,7 @@ import json
 import os
 import requests
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import aio_pika
 import psycopg2
@@ -97,11 +97,9 @@ def get_sensor_data(sensor_id: str):
     target_url = SIMULATOR_URL.replace("actuators", "sensors") + f"/{sensor_id}"
     
     print(f"[PROXY DEBUG] Frontend asked for: {sensor_id}", flush=True)
-    print(f"[PROXY DEBUG] Target Internal URL: {target_url}", flush=True)
     
     try:
         resp = requests.get(target_url, timeout=3)
-        print(f"[PROXY DEBUG] Simulator Status: {resp.status_code}", flush=True)
         
         if resp.status_code == 200:
             return resp.json()
@@ -139,12 +137,17 @@ def create_rule(rule: dict):
         conn = get_db_connection()
         cur = conn.cursor()
         
+        # --- QUERY CORRETTA (UPSERT) ---
+        # Usa il vincolo UNIQUE (sensor_id, actuator_id, operator) definito in init.sql
+        # Se esiste già una regola con lo stesso operatore, aggiorna soglia e azione.
         cur.execute(
             """
             INSERT INTO rules (sensor_id, operator, threshold, actuator_id, action_value) 
             VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (sensor_id, actuator_id, action_value) 
-            DO UPDATE SET operator = EXCLUDED.operator, threshold = EXCLUDED.threshold
+            ON CONFLICT (sensor_id, actuator_id, operator) 
+            DO UPDATE SET 
+                threshold = EXCLUDED.threshold, 
+                action_value = EXCLUDED.action_value
             RETURNING (xmax = 0) AS is_insert;
             """,
             (rule['sensor_id'], rule['operator'], str(rule['threshold']), rule['actuator_id'], rule['action'])
@@ -159,6 +162,7 @@ def create_rule(rule: dict):
         action_type = "inserted" if is_insert else "updated"
         return {"status": "success", "action": action_type}
     except Exception as e:
+        print(f"[API ERROR] Rule creation failed: {e}", flush=True)
         return {"error": str(e)}
 
 @app.put("/api/rules/{rule_id}")

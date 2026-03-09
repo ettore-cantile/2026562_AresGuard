@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS rules (
     threshold VARCHAR(50) NOT NULL,
     actuator_id VARCHAR(100) NOT NULL,
     action_value VARCHAR(50) NOT NULL,
-    CONSTRAINT unique_rule UNIQUE (sensor_id, actuator_id, action_value)
+    CONSTRAINT unique_rule UNIQUE (sensor_id, actuator_id, operator)
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
