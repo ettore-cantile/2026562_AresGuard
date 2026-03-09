@@ -61,7 +61,7 @@ function renderGrid() {
                 <p class="sensor-label">${s.label}</p>
             </div>
             <div class="view-secondary">
-                <button class="graph-btn" onclick="openGraph('${s.id}', event)">GRAPH</button>
+                <button class="graph-btn" onclick="openGraph('${s.id}', event)">~ CHART</button>
                 <span class="status-label" style="color:#aaa;">MONITORING RANGE</span>
                 <div class="sensor-value-group"><h2 id="val-sec-${s.id}">--.-</h2><span class="unit">${s.unit}</span></div>
                 <div class="mini-progress-container"><div class="mini-progress-bar" id="bar-${s.id}" style="width: 0%;"></div></div>
@@ -280,8 +280,37 @@ function addToAuditLog(type, actuator, action, reason) {
     auditLogs.unshift(newLog); 
     if (auditLogs.length > 5) auditLogs.pop(); 
     
-    renderAuditTable();
     updateSystemHealth();
+
+    const tbody = document.getElementById('audit-tbody');
+    if (!tbody) return;
+
+    if (tbody.firstElementChild && tbody.firstElementChild.innerText.includes('No recent events')) {
+        tbody.innerHTML = '';
+    }
+
+    let badgeColor = type === 'MANUAL' ? '#3b82f6' : (type === 'AUTO' ? '#f59e0b' : '#666');
+    let textColor = type === 'SYSTEM' ? '#fff' : '#000';
+    
+    let formattedAction = action
+        .replace('ON', '<span style="color:#22c55e;">ON</span>')
+        .replace('OFF', '<span>OFF</span>');
+
+    const tr = document.createElement('tr');
+    tr.style.animation = 'slideInRow 0.4s ease-out forwards'; 
+    tr.innerHTML = `
+        <td style="color:#888; font-size:10px;">${newLog.timestamp}</td>
+        <td><span class="badge" style="background:${badgeColor}; color:${textColor};">${newLog.type}</span></td>
+        <td style="font-weight:bold; color:#fff;">${newLog.actuator}</td>
+        <td style="color:#888; font-weight:bold;">${formattedAction}</td>
+        <td style="font-size:10px; color:#aaa;">${newLog.reason}</td>
+    `;
+    
+    tbody.prepend(tr); 
+    
+    while (tbody.children.length > 5) {
+        tbody.lastElementChild.remove();
+    }
 }
 
 function renderAuditTable() {
@@ -293,19 +322,23 @@ function renderAuditTable() {
         return;
     }
 
-    const newRowsHTML = auditLogs.map(log => `
-        <tr style="transition: all 0.5s ease;">
+    tbody.innerHTML = auditLogs.map(log => {
+        let badgeColor = log.type === 'MANUAL' ? '#3b82f6' : (log.type === 'AUTO' ? '#f59e0b' : '#666');
+        let textColor = log.type === 'SYSTEM' ? '#fff' : '#000';
+        
+        let formattedAction = log.action
+            .replace('ON', '<span style="color:#22c55e;">ON</span>')
+            .replace('OFF', '<span>OFF</span>');
+        
+        return `
+        <tr>
             <td style="color:#888; font-size:10px;">${log.timestamp}</td>
-            <td><span class="badge ${log.type === 'MANUAL' ? 'badge-blue' : 'badge-orange'}">${log.type}</span></td>
+            <td><span class="badge" style="background:${badgeColor}; color:${textColor};">${log.type}</span></td>
             <td style="font-weight:bold; color:#fff;">${log.actuator}</td>
-            <td><span style="color:${log.action.includes('ON') ? '#22c55e' : '#ef4444'}; font-weight:bold;">${log.action}</span></td>
+            <td style="color:#888; font-weight:bold;">${formattedAction}</td>
             <td style="font-size:10px; color:#aaa;">${log.reason}</td>
         </tr>
-    `).join('');
-
-    if (tbody.innerHTML !== newRowsHTML) {
-        tbody.innerHTML = newRowsHTML;
-    }
+    `}).join('');
 }
 
 function updateSystemHealth() {
@@ -363,10 +396,14 @@ function processEventData(entry) {
     if (ACTUATOR_IDS.includes(id)) {
         const newState = (String(entry.payload.value).toUpperCase() === "ON" || entry.payload.value === true) ? "ON" : "OFF";
         
-        const isRecentManual = (Date.now() - lastManualCommandTime) < 2000;
-        if (!isRecentManual) {
+        const isRecentManual = (Date.now() - lastManualCommandTime) < 7000;
+        
+        if (!systemState.actuators.hasOwnProperty(id)) {
+            addToAuditLog("SYSTEM", id, `STATE: ${newState}`, "Last Recent Setting");
+        } else if (!isRecentManual && systemState.actuators[id] !== newState) {
             addToAuditLog("AUTO", id, `SET TO ${newState}`, "Automation Rule Trigger");
         }
+        
         syncActuator(id, entry.payload.value);
     } else {
         if (entry.payload && entry.payload.measurements) {
@@ -470,6 +507,9 @@ function openGraph(id, event) {
 
     activeChartId = id;
     document.getElementById('graph-title').innerText = `ANALYTICS: ${config.label.toUpperCase()}`;
+    
+    document.getElementById('graph-unit-badge').innerText = `UNIT [ ${config.unit} ]`;
+    
     document.getElementById('graph-modal-overlay').style.display = 'flex';
 
     const ctx = document.getElementById('liveChart').getContext('2d');
@@ -481,7 +521,7 @@ function openGraph(id, event) {
         data: {
             labels: (sensorHistory[id] || []).map(d => d.x),
             datasets: [{
-                label: `${config.label} (${config.unit})`,
+                label: `${config.label}`,
                 data: (sensorHistory[id] || []).map(d => d.y),
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -495,8 +535,14 @@ function openGraph(id, event) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { grid: { color: '#222' }, ticks: { color: '#888' } },
-                x: { grid: { display: false }, ticks: { color: '#888' } }
+                y: { 
+                    grid: { color: '#222' }, 
+                    ticks: { color: '#888' }
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: '#888', maxRotation: 45, minRotation: 45, font: { size: 9 } } 
+                }
             },
             plugins: { legend: { display: false } }
         }

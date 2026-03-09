@@ -197,8 +197,13 @@
     <div id="graph-modal-overlay" style="display: none;">
         <div class="graph-modal">
             <div class="graph-header">
-                <h3 id="graph-title">SENSOR ANALYTICS</h3>
-                <button class="btn-close-graph" onclick="closeGraph()">[X] CLOSE</button>
+                <h3 id="graph-title" class="graph-title-text">ANALYTICS: SENSOR NAME</h3>
+                
+                <div class="graph-controls">
+                    <span id="graph-unit-badge" class="unit-badge">UNIT [ -- ]</span>
+                    
+                    <button class="btn-close-graph" onclick="closeGraph()">X CLOSE</button>
+                </div>
             </div>
             <div class="graph-container">
                 <canvas id="liveChart"></canvas>

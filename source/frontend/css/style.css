@@ -311,8 +311,6 @@ input:checked + .slider:before { transform: translateX(18px); background: white;
 .rules-table tbody tr { transition: background 0.2s ease; }
 .rules-table tbody tr:hover td { background: #222; }
 
-body.engineer-mode #critical-banner { display: none !important; }
-
 .rule-form select { 
     background-color: #000; color: #fff; border: 1px solid #444; padding: 6px 25px 6px 10px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 13px; cursor: pointer; 
     -webkit-appearance: none; -moz-appearance: none; appearance: none; 
@@ -390,8 +388,13 @@ body.engineer-mode #critical-banner { display: none !important; }
 .btn-modal-confirm:hover { background: #fbbf24; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
 
 #toast-container { 
-    position: fixed; bottom: 30px; right: 30px; z-index: 10001; 
-    display: flex; flex-direction: column; gap: 10px; 
+    position: fixed; 
+    top: 30px;
+    right: 30px; 
+    z-index: 10001; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
 }
 
 .toast { 
@@ -424,8 +427,7 @@ body.engineer-mode #critical-banner { display: none !important; }
     .top-bar { flex-direction: column; align-items: flex-start; gap: 15px; } 
 }
 
-/* --- SENSOR GRAPH STYLES --- */
-.view-secondary { position: relative; } /* Per posizionare il tasto GRAPH */
+.view-secondary { position: relative; } 
 
 .graph-btn {
     position: absolute;
@@ -463,8 +465,52 @@ body.engineer-mode #critical-banner { display: none !important; }
 
 .graph-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 10px; }
 .graph-header h3 { color: #3b82f6; font-size: 14px; letter-spacing: 2px; }
-.btn-close-graph { background: transparent; border: none; color: #666; cursor: pointer; font-family: monospace; }
-.btn-close-graph:hover { color: #ef4444; }
+
+.graph-controls {
+    display: flex;
+    gap: 10px; 
+    align-items: center;
+}
+
+.unit-badge, .btn-close-graph {
+    background: #222; 
+    border: 1px solid #444;
+    color: #fff;
+    padding: 6px 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-close-graph {
+    cursor: pointer;
+}
+
+.btn-close-graph:hover {
+    background: #ef4444; 
+    border-color: #ef4444;
+    color: #fff;
+}
+
+#graph-unit-badge {
+    color: #3b82f6; 
+}
 
 .graph-container { height: 400px; width: 100%; }
 .graph-footer { margin-top: 15px; font-size: 10px; color: #22c55e; font-family: monospace; letter-spacing: 1px; }
+
+@keyframes slideInRow {
+    0% { opacity: 0; transform: translateY(-10px); background-color: rgba(59, 130, 246, 0.2); }
+    100% { opacity: 1; transform: translateY(0); background-color: transparent; }
+}
+
+.custom-modal { max-width: 90%; }
+.boot-terminal { max-width: 90%; }
+.role-switcher { flex-wrap: wrap; justify-content: center; }
