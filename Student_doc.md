@@ -93,6 +93,7 @@ Connects to **RabbitMQ** to consume the normalized telemetry stream. Connects to
   | HTTP METHOD | URL | Description |
   | :--- | :--- | :--- |
   | **GET** | `/api/state` | Returns the full in-memory cache of sensors |
+  | **GET** | `/api/sensors/{sensor_id}` | Proxies manual fetch requests to the Simulator |
   | **POST** | `/api/commands/{actuator_id}` | Proxies manual commands to the Simulator |
   | **GET** | `/api/rules` | Retrieves all saved automation rules |
   | **POST** | `/api/rules` | Saves a new rule (Upsert logic) |
@@ -179,7 +180,11 @@ The persistent storage layer for the platform. Stores automation rules and the h
 * **PORTS:** `5432`
 * **TECHNOLOGICAL SPECIFICATION:**
   * PostgreSQL 15 (Alpine)
-* **DB STRUCTURE:** **_rules_** : | **id** | sensor_id | operator | threshold | actuator_id | action_value |
+* **DB STRUCTURE:** 
+
+  **_sensor_data_** : | **id** | sensor_id | value | unit | timestamp |
+
+  **_rules_** : | **id** | sensor_id | operator | threshold | actuator_id | action_value |
   
   **_audit_logs_** : | **id** | command_id | timestamp | sensor_id | sensor_value | actuator_id | action_taken |
 
