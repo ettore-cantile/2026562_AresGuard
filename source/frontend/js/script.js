@@ -781,7 +781,6 @@ function toggleLogSize(logId, btnId) {
         btn.innerText = "⤢ EXPAND VIEW";
         btn.style.borderColor = "#444";
         btn.style.color = "#666";
-        // Clear stored active elements
         backdrop.removeAttribute('data-active-log');
         backdrop.removeAttribute('data-active-btn');
     } else {
@@ -790,7 +789,6 @@ function toggleLogSize(logId, btnId) {
         btn.innerText = "⤡ MINIMIZE VIEW";
         btn.style.borderColor = "#22c55e";
         btn.style.color = "#22c55e";
-        // Store which log is open so backdrop knows what to close
         backdrop.setAttribute('data-active-log', logId);
         backdrop.setAttribute('data-active-btn', btnId);
     }
